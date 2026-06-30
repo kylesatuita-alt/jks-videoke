@@ -1,0 +1,18 @@
+# User-uploaded files — don't commit real user data/photos
+uploads/avatars/*
+!uploads/avatars/.gitkeep
+
+# OS junk files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Local environment file (if you create one later)
+.env

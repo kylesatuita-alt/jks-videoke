@@ -1,0 +1,318 @@
+/* =============================================
+   JKS VIDEOKE — Global Stylesheet
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --bg-deep:    #0D1B2A;
+    --bg-card:    #1A2C42;
+    --bg-input:   #0F2236;
+    --gold:       #F5C518;
+    --gold-dim:   #c9a012;
+    --text-main:  #EAEEF2;
+    --text-muted: #7A96B0;
+    --danger:     #E05C5C;
+    --success:    #4CAF88;
+    --radius:     12px;
+    --transition: 0.22s ease;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow-x: hidden;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(245,197,24,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(245,197,24,0.04) 0%, transparent 50%);
+}
+
+/* ── Card ── */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 36px;
+    border: 1px solid rgba(245,197,24,0.12);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    position: relative;
+}
+
+/* ── Brand header ── */
+.brand {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.brand-logo {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 12px;
+    position: relative;
+}
+
+.brand-logo svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 12px rgba(245,197,24,0.5));
+}
+
+.brand h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.brand p {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ── Form title ── */
+.form-title {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 22px;
+    color: var(--text-main);
+}
+
+/* ── Form fields ── */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.form-group input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(245,197,24,0.12);
+}
+
+.form-group input::placeholder {
+    color: #3d5a74;
+}
+
+/* capitalize first letter via JS — visual hint via CSS */
+.capitalize-first {
+    text-transform: capitalize;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: center;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+}
+
+.btn-primary {
+    background: var(--gold);
+    color: #0D1B2A;
+    margin-top: 6px;
+}
+
+.btn-primary:hover {
+    background: #ffd234;
+    box-shadow: 0 4px 20px rgba(245,197,24,0.35);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    margin-top: 8px;
+}
+
+.btn-ghost:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.btn-danger {
+    background: rgba(224,92,92,0.12);
+    color: var(--danger);
+    border: 1.5px solid rgba(224,92,92,0.25);
+}
+
+.btn-danger:hover {
+    background: rgba(224,92,92,0.22);
+}
+
+/* ── Divider ── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.divider span {
+    height: 1px;
+    flex: 1;
+    background: rgba(255,255,255,0.07);
+}
+
+.divider p {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ── Alerts ── */
+.alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.alert-error {
+    background: rgba(224,92,92,0.12);
+    border: 1px solid rgba(224,92,92,0.3);
+    color: #f08080;
+}
+
+.alert-success {
+    background: rgba(76,175,136,0.12);
+    border: 1px solid rgba(76,175,136,0.3);
+    color: #6fcfaa;
+}
+
+
+
+
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    body {
+        padding: 0;
+        align-items: flex-start; /* card starts from top on mobile */
+    }
+
+    .card {
+        max-width: 100%;
+        width: 100%;
+        min-height: 100vh;          /* fills full screen */
+        border-radius: 0;           /* edge-to-edge */
+        border-left: none;
+        border-right: none;
+        padding: 48px 24px 40px;
+        border-top: none;
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .brand {
+        margin-bottom: 24px;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .brand h1 {
+        font-size: 28px;
+        letter-spacing: 2.5px;
+    }
+
+    .brand p {
+        font-size: 10px;
+        letter-spacing: 2px;
+    }
+
+    .form-title {
+        font-size: 17px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-group input {
+        font-size: 16px;   /* prevents iOS zoom on focus */
+        padding: 13px 14px;
+        border-radius: 10px;
+    }
+
+    .btn {
+        font-size: 15px;
+        padding: 14px;
+        border-radius: 10px;
+    }
+
+    .divider {
+        margin: 16px 0;
+    }
+
+    .alert {
+        font-size: 13px;
+        padding: 11px 14px;
+    }
+}
+
+@media (max-width: 360px) {
+    .card { padding: 40px 18px 32px; }
+    .brand h1 { font-size: 24px; }
+}
+
+/* Homepage-specific styles are in css/home.css */
