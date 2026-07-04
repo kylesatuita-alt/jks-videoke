@@ -611,6 +611,114 @@ body {
 .btn-checkout:hover { background: #ffcf2a; }
 
 /* =========================================
+/* =========================================
+   GUEST LOGIN MODAL
+   ========================================= */
+.guest-modal {
+    position: relative;
+    background: linear-gradient(160deg, #0e1f30 0%, #142030 60%, #0a1520 100%);
+    border: 1px solid rgba(245,197,24,0.18);
+    border-radius: var(--radius-lg);
+    padding: 44px 36px 36px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow:
+        0 0 0 1px rgba(245,197,24,0.06),
+        0 32px 80px rgba(0,0,0,0.7),
+        0 0 60px rgba(245,197,24,0.04) inset;
+    animation: guestModalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes guestModalIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.guest-modal-close {
+    position: absolute; top: 14px; right: 14px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+.guest-modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.guest-modal-close svg  { width: 14px; height: 14px; }
+.guest-modal-icon {
+    width: 72px; height: 72px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 0 18px rgba(245,197,24,0.4));
+    animation: guestIconFloat 3s ease-in-out infinite;
+}
+@keyframes guestIconFloat {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+}
+.guest-modal-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px; opacity: 0.8;
+}
+.guest-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; letter-spacing: 2px;
+    color: var(--text); line-height: 1; margin-bottom: 12px;
+}
+.guest-modal-sub {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.7; margin-bottom: 24px;
+}
+.guest-modal-features {
+    display: flex; justify-content: center;
+    gap: 8px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.guest-modal-feature {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(245,197,24,0.07);
+    border: 1px solid rgba(245,197,24,0.15);
+    border-radius: 20px; padding: 6px 12px;
+    font-size: 11px; font-weight: 600;
+    color: var(--gold); letter-spacing: 0.3px;
+}
+.guest-modal-feature svg { width: 12px; height: 12px; stroke: var(--gold); flex-shrink: 0; }
+.guest-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+.guest-modal-divider {
+    font-size: 11px; color: var(--muted);
+    opacity: 0.5; letter-spacing: 1px; text-align: center;
+}
+.guest-modal-btn-primary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--gold); color: #0A1520;
+    font-size: 15px; font-weight: 700;
+    padding: 13px; border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+    letter-spacing: 0.3px;
+}
+.guest-modal-btn-primary:hover {
+    background: #ffd234;
+    box-shadow: 0 4px 24px rgba(245,197,24,0.35);
+    transform: translateY(-1px);
+}
+.guest-modal-btn-secondary {
+    display: block; background: transparent;
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    padding: 11px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-decoration: none;
+    transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+.guest-modal-btn-secondary:hover {
+    border-color: rgba(255,255,255,0.18);
+    color: var(--text); background: rgba(255,255,255,0.04);
+}
+@media (max-width: 480px) {
+    .guest-modal { padding: 36px 20px 28px; border-radius: var(--radius-md); }
+    .guest-modal-title { font-size: 30px; }
+    .guest-modal-feature { font-size: 10px; padding: 5px 10px; }
+}
+
+/* =========================================
    TOAST
    ========================================= */
 .toast-container {

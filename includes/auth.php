@@ -7,14 +7,14 @@ function isLoggedIn() {
 
 function requireLogin() {
     if (!isLoggedIn()) {
-        header('Location: index.php');
+        header('Location: login.php');
         exit();
     }
 }
 
 function requireGuest() {
     if (isLoggedIn()) {
-        header('Location: home.php');
+        header('Location: index.php');
         exit();
     }
 }

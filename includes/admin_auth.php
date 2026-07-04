@@ -6,6 +6,6 @@ requireLogin();
 $user = getCurrentUser();
 
 if ($user['role'] !== 'admin') {
-    header('Location: ../home.php');
+    header('Location: ../index.php');
     exit();
 }

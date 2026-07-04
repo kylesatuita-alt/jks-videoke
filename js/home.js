@@ -9,6 +9,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const $$ = sel => document.querySelectorAll(sel);
     const today = new Date().toISOString().split('T')[0];
 
+    // ── Guest gate — intercept Reserve/Cart/Fav clicks ──
+    if (typeof IS_GUEST !== 'undefined' && IS_GUEST) {
+        const guestModal = document.getElementById('guestModal');
+
+        function showGuestModal(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (guestModal) {
+                guestModal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // Intercept all guest-gated buttons
+        document.querySelectorAll('[data-guest="1"]').forEach(btn => {
+            btn.addEventListener('click', showGuestModal, true); // capture phase
+        });
+
+        // Close modal on overlay click
+        guestModal?.addEventListener('click', e => {
+            if (e.target === guestModal) {
+                guestModal.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Close modal on X button click
+        document.getElementById('guestModalClose')?.addEventListener('click', () => {
+            guestModal.classList.remove('open');
+            document.body.style.overflow = '';
+        });
+
+        // Also intercept the "Reserve" button inside the View Details panel
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.detail-reserve-btn, .detail-cart-btn');
+            if (btn) { showGuestModal(e); }
+        }, true);
+    }
+
     function calcEndDate(start) {
         const d = new Date(start);
         d.setDate(d.getDate() + 3);
@@ -527,9 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     }
 
+    if (!IS_GUEST) {
     notifToggle.addEventListener('click', openNotifDrawer);
     notifClose.addEventListener('click', closeNotifDrawer);
     notifOverlay.addEventListener('click', closeNotifDrawer);
+    }
 
     function timeAgo(dateStr) {
         const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -613,10 +654,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) {}
     }
 
-    // Poll every 30 seconds for new notifications
-    refreshNotifCount();
-    setInterval(refreshNotifCount, 30000);
-
+    // Poll every 30 seconds for new notifications (logged-in only)
+    if (!IS_GUEST) {
+        refreshNotifCount();
+        setInterval(refreshNotifCount, 30000);
+    }
 
     const drawer        = $('cartDrawer');
     const drawerOverlay = $('drawerOverlay');
@@ -633,8 +675,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     }
 
-    $('cartToggle').addEventListener('click', openDrawer);
-    $('drawerClose').addEventListener('click', closeDrawer);
+    if (!IS_GUEST) {
+    $('cartToggle')?.addEventListener('click', openDrawer);
+    $('drawerClose')?.addEventListener('click', closeDrawer);
+    }
     drawerOverlay.addEventListener('click', closeDrawer);
 
     // ── Add to Cart ───────────────────────────
@@ -865,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================
 //  PROFILE PANEL
 // =============================================
-(function () {
+if (typeof IS_GUEST === 'undefined' || !IS_GUEST) (function () {
     const panel     = document.getElementById('profilePanel');
     const overlay   = document.getElementById('profileOverlay');
     const toggleBtn = document.getElementById('profileToggle');
