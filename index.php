@@ -38,10 +38,7 @@ $cartRows  = [];
 $favIds    = [];
 
 if (!$isGuest) {
-    $cartStmt = $pdo->prepare("SELECT COUNT(*) FROM cart WHERE user_id = ?");
-    $cartStmt->execute([$user['id']]);
-    $cartCount = (int)$cartStmt->fetchColumn();
-
+    // Single query for cart items (count derived from results)
     $cartItems = $pdo->prepare("
         SELECT c.*, v.name AS v_name, v.unit_number, v.price_3days
         FROM cart c JOIN videokes v ON v.id = c.videoke_id
@@ -49,13 +46,14 @@ if (!$isGuest) {
         ORDER BY c.added_at DESC
     ");
     $cartItems->execute([$user['id']]);
-    $cartRows = $cartItems->fetchAll();
+    $cartRows  = $cartItems->fetchAll();
+    $cartCount = count($cartRows);
 
     $favStmt = $pdo->prepare("SELECT videoke_id FROM favorites WHERE user_id = ?");
     $favStmt->execute([$user['id']]);
     $favIds = array_column($favStmt->fetchAll(), 'videoke_id');
 
-    // Sync avatar into session if not set
+    // Avatar already in session from login — no extra query needed
     if (!isset($_SESSION['user']['avatar'])) {
         $avatarRow = $pdo->prepare("SELECT avatar FROM users WHERE id = ? LIMIT 1");
         $avatarRow->execute([$user['id']]);
@@ -93,7 +91,10 @@ foreach ($bookedRows as $b) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JKS Videoke — Browse Units</title>
-    <link rel="stylesheet" href="css/home.css">
+    <!-- Preconnect to CDN for faster external resource loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="css/home.css?v=<?= filemtime('css/home.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 </head>
 <body>
@@ -944,11 +945,11 @@ const bookedRanges = <?php echo json_encode($bookedRanges); ?>;
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
 <script>
 // Passed from PHP — lets home.js know if user is a guest
 const IS_GUEST = <?php echo $isGuest ? 'true' : 'false'; ?>;
 </script>
-<script src="js/home.js"></script>
+<script src="js/home.js?v=<?= filemtime('js/home.js') ?>" defer></script>
 </body>
 </html>
