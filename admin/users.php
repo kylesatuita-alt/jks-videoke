@@ -91,12 +91,19 @@ $users = $pdo->query("
             data-phone="<?= htmlspecialchars($u['phone']) ?>"
             data-location="<?= htmlspecialchars($u['location']) ?>"
             data-joined="<?= date('M j, Y', strtotime($u['created_at'])) ?>"
-            data-rescount="<?= $u['res_count'] ?>">
+            data-rescount="<?= $u['res_count'] ?>"
+            data-avatar="<?= htmlspecialchars($u['avatar'] ?? '') ?>">
             <td>
                 <div style="display:flex; align-items:center; gap:9px;">
-                    <div style="width:30px; height:30px; border-radius:50%; background:var(--gold); color:#0A1520; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <?php if (!empty($u['avatar'])): ?>
+                    <img src="../<?= htmlspecialchars($u['avatar']) ?>"
+                         alt="<?= htmlspecialchars($u['name']) ?>"
+                         style="width:32px; height:32px; border-radius:50%; object-fit:cover; flex-shrink:0; border:2px solid var(--gold);">
+                    <?php else: ?>
+                    <div style="width:32px; height:32px; border-radius:50%; background:var(--gold); color:#0A1520; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                         <?= strtoupper(substr($u['name'],0,1)) ?>
                     </div>
+                    <?php endif; ?>
                     <div class="td-name"><?= htmlspecialchars($u['name']) ?></div>
                 </div>
             </td>
@@ -185,16 +192,35 @@ function openModal(id)  { document.getElementById(id).classList.add('open'); doc
 function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
 document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('open'); document.body.style.overflow=''; } }));
 
-// ── User Detail ──
 function openUserDetail(row) {
     activeUserRow = row;
     const d = row.dataset;
     const isSelf = d.id == currentAdminId;
+
+    // Avatar — photo or initials
+    const avatarHtml = d.avatar
+        ? `<img src="../${d.avatar}" alt="${d.name}"
+               style="width:64px; height:64px; border-radius:50%; object-fit:cover;
+                      border:3px solid var(--gold); box-shadow:0 2px 12px rgba(0,0,0,0.4);">`
+        : `<div style="width:64px; height:64px; border-radius:50%; background:var(--gold);
+                       color:#0A1520; font-size:26px; font-weight:800;
+                       display:flex; align-items:center; justify-content:center;">
+               ${d.name.charAt(0).toUpperCase()}
+           </div>`;
+
     document.getElementById('userDetailName').textContent = d.name;
     document.getElementById('userDetailBody').innerHTML = `
-        <div class="detail-row">
-            <div class="detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-            <div><div class="detail-label">Email</div><div class="detail-value">${d.email}</div></div>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;
+                    padding-bottom:16px; border-bottom:1px solid var(--border);">
+            ${avatarHtml}
+            <div>
+                <div style="font-size:16px; font-weight:700; color:var(--text);">${d.name}</div>
+                <div style="font-size:12px; color:var(--muted); margin-top:3px;">${d.email}</div>
+                <span class="badge ${d.role === 'admin' ? 'active' : 'returned'}"
+                      style="text-transform:capitalize; margin-top:6px; display:inline-block;">
+                    ${d.role.charAt(0).toUpperCase() + d.role.slice(1)}
+                </span>
+            </div>
         </div>
         <div class="detail-row">
             <div class="detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.02-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>

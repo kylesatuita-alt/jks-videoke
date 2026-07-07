@@ -202,8 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     }
 
-    detailClose.addEventListener('click', closeDetailModal);
-    detailModal.addEventListener('click', e => { if (e.target === detailModal) closeDetailModal(); });
+    detailClose?.addEventListener('click', closeDetailModal);
+    detailModal?.addEventListener('click', e => { if (e.target === detailModal) closeDetailModal(); });
 
     $$('.btn-details').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCal() {
+        if (!calGrid || !calMonthLbl) return;
         calMonthLbl.textContent = `${MONTHS[calMonth]} ${calYear}`;
         const todayYmd = toYMD(new Date());
         const firstDay = new Date(calYear, calMonth, 1).getDay();
@@ -364,12 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCal();
     }
 
-    $('calPrev').addEventListener('click', () => {
+    $('calPrev')?.addEventListener('click', () => {
         calMonth--;
         if (calMonth < 0) { calMonth = 11; calYear--; }
         renderCal();
     });
-    $('calNext').addEventListener('click', () => {
+    $('calNext')?.addEventListener('click', () => {
         calMonth++;
         if (calMonth > 11) { calMonth = 0; calYear++; }
         renderCal();
@@ -555,21 +556,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifEmpty   = $('notifEmpty');
 
     function openNotifDrawer() {
+        if (!notifDrawer) return;
         notifDrawer.classList.add('open');
         notifOverlay.classList.add('open');
         document.body.style.overflow = 'hidden';
         loadNotifications();
     }
     function closeNotifDrawer() {
+        if (!notifDrawer) return;
         notifDrawer.classList.remove('open');
         notifOverlay.classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    if (!IS_GUEST) {
+    if (!IS_GUEST && notifToggle) {
     notifToggle.addEventListener('click', openNotifDrawer);
-    notifClose.addEventListener('click', closeNotifDrawer);
-    notifOverlay.addEventListener('click', closeNotifDrawer);
+    notifClose?.addEventListener('click', closeNotifDrawer);
+    notifOverlay?.addEventListener('click', closeNotifDrawer);
     }
 
     function timeAgo(dateStr) {
@@ -626,19 +629,20 @@ document.addEventListener('DOMContentLoaded', () => {
         await refreshNotifCount();
     }
 
-    $('notifReadAll').addEventListener('click', async () => {
+    $('notifReadAll')?.addEventListener('click', async () => {
         const fd = new FormData();
         fd.append('action', 'read_all');
         await fetch('notifications.php', { method: 'POST', body: fd });
-        notifList.querySelectorAll('.notif-item.unread').forEach(el => {
+        notifList?.querySelectorAll('.notif-item.unread').forEach(el => {
             el.classList.remove('unread');
             el.querySelector('.notif-dot')?.remove();
         });
-        notifBadge.style.display = 'none';
-        notifToggle.classList.remove('has-unread');
+        if (notifBadge) notifBadge.style.display = 'none';
+        notifToggle?.classList.remove('has-unread');
     });
 
     async function refreshNotifCount() {
+        if (!notifBadge || !notifToggle) return;
         try {
             const res  = await fetch('notifications.php?action=count');
             const data = await res.json();
@@ -664,14 +668,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerOverlay = $('drawerOverlay');
 
     function openDrawer() {
-        drawer.classList.add('open');
-        drawerOverlay.classList.add('open');
+        drawer?.classList.add('open');
+        drawerOverlay?.classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
     function closeDrawer() {
-        drawer.classList.remove('open');
-        drawerOverlay.classList.remove('open');
+        drawer?.classList.remove('open');
+        drawerOverlay?.classList.remove('open');
         document.body.style.overflow = '';
     }
 
@@ -679,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('cartToggle')?.addEventListener('click', openDrawer);
     $('drawerClose')?.addEventListener('click', closeDrawer);
     }
-    drawerOverlay.addEventListener('click', closeDrawer);
+    drawerOverlay?.addEventListener('click', closeDrawer);
 
     // ── Add to Cart ───────────────────────────
     $$('.btn-cart').forEach(btn => {
@@ -834,9 +838,9 @@ document.addEventListener('DOMContentLoaded', () => {
         csOverlay.classList.remove('open');
         clearInterval(csPollInterval);
     }
-    csToggle.addEventListener('click', openCS);
-    csClose.addEventListener('click',  closeCS);
-    csOverlay.addEventListener('click', closeCS);
+    csToggle?.addEventListener('click', openCS);
+    csClose?.addEventListener('click',  closeCS);
+    csOverlay?.addEventListener('click', closeCS);
 
     // Quick suggestion buttons
     document.querySelectorAll('.cs-suggest-btn').forEach(btn => {
@@ -890,6 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkCsUnread() {
+        if (!csToggle) return;
         try {
             const res  = await fetch('messages.php?action=unread');
             const data = await res.json();
@@ -897,12 +902,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) {}
     }
 
-    csSend.addEventListener('click', sendCsMessage);
-    csInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCsMessage(); } });
-    csInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
+    csSend?.addEventListener('click', sendCsMessage);
+    csInput?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCsMessage(); } });
+    csInput?.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
 
-    checkCsUnread();
-    setInterval(checkCsUnread, 30000);
+    if (csToggle) {
+        checkCsUnread();
+        setInterval(checkCsUnread, 30000);
+    }
 });
 
 

@@ -17,19 +17,45 @@ $stmt = $pdo->prepare("
                   AND ? BETWEEN r.start_date AND r.end_date
             ) THEN 'unavailable'
             ELSE 'available'
-        END AS today_status
+        END AS today_status,
+        (
+            SELECT DATE_ADD(MAX(r2.end_date), INTERVAL 1 DAY)
+            FROM reservations r2
+            WHERE r2.videoke_id = v.id
+              AND r2.status IN ('confirmed','active','pending')
+              AND r2.end_date >= ?
+        ) AS next_available_date
     FROM favorites f
     JOIN videokes v ON v.id = f.videoke_id
     WHERE f.user_id = ?
     ORDER BY f.added_at DESC
 ");
-$stmt->execute([$today, $user['id']]);
+$stmt->execute([$today, $today, $user['id']]);
 $favorites = $stmt->fetchAll();
 
-$cartStmt = $pdo->prepare("SELECT COUNT(*) FROM cart WHERE user_id = ?");
-$cartStmt->execute([$user['id']]);
-$cartCount = (int)$cartStmt->fetchColumn();
+$cartItems = $pdo->prepare("
+    SELECT c.*, v.name AS v_name, v.unit_number, v.price_3days
+    FROM cart c JOIN videokes v ON v.id = c.videoke_id
+    WHERE c.user_id = ?
+    ORDER BY c.added_at DESC
+");
+$cartItems->execute([$user['id']]);
+$cartRows = $cartItems->fetchAll();
 
+// Booked date ranges per unit (for calendar blocking in reserve modal)
+$bookedRows = $pdo->query("
+    SELECT videoke_id, start_date, end_date
+    FROM reservations
+    WHERE status IN ('pending','confirmed','active','delivering')
+      AND end_date >= CURDATE()
+    ORDER BY videoke_id, start_date
+")->fetchAll();
+$bookedRanges = [];
+foreach ($bookedRows as $b) {
+    $bookedRanges[$b['videoke_id']][] = [$b['start_date'], $b['end_date']];
+}
+
+$cartCount = count($cartRows);
 $availCount = count(array_filter($favorites, fn($v) => $v['today_status'] === 'available'));
 
 // Fetch delivery areas for reserve modal (same as home.php)
@@ -64,7 +90,7 @@ foreach ($areaRows as $a) {
         <span class="nav-wordmark">JKS Videoke</span>
     </div>
     <div class="nav-right">
-        <a href="home.php" class="nav-link-btn">
+        <a href="index.php" class="nav-link-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Browse Units
         </a>
@@ -107,7 +133,7 @@ foreach ($areaRows as $a) {
         </svg>
         <h3>No favorites yet</h3>
         <p>Browse units and tap the ♥ heart to save them here.</p>
-        <a href="home.php" class="btn-goto-browse">Browse Units</a>
+        <a href="index.php" class="btn-goto-browse">Browse Units</a>
     </div>
 
     <?php else: ?>
@@ -189,10 +215,12 @@ foreach ($areaRows as $a) {
 
                 <div class="card-actions">
                     <?php if ($isAvail): ?>
+                    <div class="btn-row">
                     <button class="btn-reserve"
                         data-id="<?php echo $v['id']; ?>"
                         data-name="<?php echo htmlspecialchars($v['name']); ?>"
-                        data-unit="<?php echo $v['unit_number']; ?>">
+                        data-unit="<?php echo $v['unit_number']; ?>"
+                        data-next-available="<?php echo htmlspecialchars($v['next_available_date'] ?? ''); ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         Reserve
                     </button>
@@ -202,8 +230,18 @@ foreach ($areaRows as $a) {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                         Add to Cart
                     </button>
+                    </div>
                     <?php else: ?>
-                    <div class="btn-unavailable">Not Available Today</div>
+                    <div class="btn-row">
+                    <button class="btn-reserve btn-reserve-future"
+                        data-id="<?php echo $v['id']; ?>"
+                        data-name="<?php echo htmlspecialchars($v['name']); ?>"
+                        data-unit="<?php echo $v['unit_number']; ?>"
+                        data-next-available="<?php echo htmlspecialchars($v['next_available_date'] ?? ''); ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Reserve Future Date
+                    </button>
+                    </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -233,21 +271,27 @@ foreach ($areaRows as $a) {
             <form id="reserveForm">
                 <input type="hidden" name="videoke_id" id="modalVideoke">
 
-                <!-- Date row -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            Start Date
-                        </label>
-                        <input type="date" name="start_date" id="startDate" required>
+                <input type="hidden" name="start_date" id="startDate">
+                <input type="hidden" name="end_date"   id="endDate">
+                <!-- Custom calendar -->
+                <div class="cal-wrap" id="calWrap">
+                    <div class="cal-nav">
+                        <button type="button" class="cal-nav-btn" id="calPrev">&#8249;</button>
+                        <span class="cal-month-label" id="calMonthLabel"></span>
+                        <button type="button" class="cal-nav-btn" id="calNext">&#8250;</button>
                     </div>
-                    <div class="form-group">
-                        <label>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            End Date <span class="label-hint">auto · 3 days</span>
-                        </label>
-                        <input type="date" name="end_date" id="endDate" required readonly>
+                    <div class="cal-weekdays">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+                    <div class="cal-grid" id="calGrid"></div>
+                    <div class="cal-legend">
+                        <span class="cal-legend-item"><span class="cal-legend-dot booked"></span> Booked</span>
+                        <span class="cal-legend-item"><span class="cal-legend-dot selected"></span> Your dates</span>
+                        <span class="cal-legend-item"><span class="cal-legend-dot today-dot"></span> Today</span>
+                    </div>
+                    <div class="cal-selection" id="calSelection" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span id="calSelectionText"></span>
                     </div>
                 </div>
 
@@ -328,15 +372,33 @@ foreach ($areaRows as $a) {
         <button class="drawer-close" id="drawerClose">&#215;</button>
     </div>
     <div class="drawer-items" id="drawerItems">
-        <div class="drawer-empty" id="emptyMsg">
+        <div class="drawer-empty" id="emptyMsg" style="display:<?php echo empty($cartRows) ? 'block' : 'none'; ?>">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             <p>Your cart is empty.<br>Add a unit to get started!</p>
         </div>
+        <?php foreach ($cartRows as $ci): ?>
+        <div class="cart-item-card" id="ci-<?php echo $ci['videoke_id']; ?>">
+            <div class="ci-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8"  y1="23" x2="16" y2="23"/>
+                </svg>
+            </div>
+            <div class="ci-info">
+                <div class="ci-name">Unit <?php echo str_pad($ci['unit_number'],2,'0',STR_PAD_LEFT); ?> &middot; <?php echo htmlspecialchars($ci['v_name']); ?></div>
+                <div class="ci-dates"><?php echo $ci['start_date']; ?> &#8594; <?php echo $ci['end_date']; ?></div>
+                <div class="ci-price ci-price-note">Price set at reservation</div>
+            </div>
+            <button class="ci-remove" data-id="<?php echo $ci['videoke_id']; ?>">&#215;</button>
+        </div>
+        <?php endforeach; ?>
     </div>
     <div class="drawer-footer">
         <div class="drawer-total">
             <span>Items in cart</span>
-            <strong id="drawerTotal">0</strong>
+            <strong id="drawerTotal"><?php echo $cartCount; ?></strong>
         </div>
         <button class="btn-checkout" id="checkoutBtn">Proceed to Reserve</button>
     </div>
@@ -348,7 +410,17 @@ foreach ($areaRows as $a) {
 <script>
 let cartTotal = 0;
 let cartCount = <?php echo $cartCount; ?>;
-const areaMap = <?php echo json_encode($areaMap); ?>;
+const areaMap     = <?php echo json_encode($areaMap); ?>;
+const bookedRanges = <?php echo json_encode($bookedRanges); ?>;
+const IS_GUEST = false;
+
+// Pre-populate cart items from server
+const serverCartRows = <?php echo json_encode(array_map(fn($c) => [
+    'id'         => $c['id'],
+    'videoke_id' => $c['videoke_id'],
+    'v_name'     => $c['v_name'],
+    'unit_number'=> $c['unit_number'],
+], $cartRows)); ?>;
 </script>
 <script src="js/home.js"></script>
 </body>
